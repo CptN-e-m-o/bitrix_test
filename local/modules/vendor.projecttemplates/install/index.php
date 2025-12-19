@@ -5,6 +5,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\ModuleManager;
 use Vendor\ProjectTemplates\Table\ProjectTemplateTable;
+use Vendor\ProjectTemplates\Table\ProjectTemplateTaskTable;
 
 Loc::loadMessages(__FILE__);
 
@@ -51,16 +52,47 @@ class vendor_projecttemplates extends CModule
             ProjectTemplateTable::getEntity()->createDbTable();
         }
 
-        ProjectTemplateTable::add([
+        if (!$connection->isTableExists(ProjectTemplateTaskTable::getTableName())) {
+            ProjectTemplateTaskTable::getEntity()->createDbTable();
+        }
+
+        $template1 = ProjectTemplateTable::add([
             'NAME' => 'Тестовый шаблон проекта 1',
             'RESPONSIBLE_ID' => 1,
             'CREATED_AT' => new \Bitrix\Main\Type\DateTime(),
         ]);
 
-        ProjectTemplateTable::add([
+        $template2 = ProjectTemplateTable::add([
             'NAME' => 'Тестовый шаблон проекта 2',
             'RESPONSIBLE_ID' => 1,
             'CREATED_AT' => new \Bitrix\Main\Type\DateTime(),
+        ]);
+
+        $template1Id = $template1->getId();
+        $template2Id = $template2->getId();
+
+        ProjectTemplateTaskTable::add([
+            'TEMPLATE_ID' => $template1Id,
+            'TITLE' => 'Первая тестовая задача',
+            'DESCRIPTION' => 'Описание первой задачи',
+            'RESPONSIBLE_ID' => 1,
+            'DEADLINE_OFFSET_DAYS' => 1,
+        ]);
+
+        ProjectTemplateTaskTable::add([
+            'TEMPLATE_ID' => $template1Id,
+            'TITLE' => 'Вторая тестовая задача',
+            'DESCRIPTION' => 'Описание второй задачи',
+            'RESPONSIBLE_ID' => 1,
+            'DEADLINE_OFFSET_DAYS' => 3,
+        ]);
+
+        ProjectTemplateTaskTable::add([
+            'TEMPLATE_ID' => $template2Id,
+            'TITLE' => 'Задача для шаблона 2',
+            'DESCRIPTION' => 'Описание задачи',
+            'RESPONSIBLE_ID' => 1,
+            'DEADLINE_OFFSET_DAYS' => 2,
         ]);
     }
 
@@ -70,10 +102,17 @@ class vendor_projecttemplates extends CModule
 
         $connection = Application::getConnection();
 
-        if ($connection->isTableExists('vendor_project_templates')) {
+        if ($connection->isTableExists(ProjectTemplateTaskTable::getTableName())) {
+            $connection->queryExecute(
+                'DROP TABLE ' . ProjectTemplateTaskTable::getTableName()
+            );
+        }
+
+        if ($connection->isTableExists(ProjectTemplateTable::getTableName())) {
             $connection->queryExecute(
                 'DROP TABLE ' . ProjectTemplateTable::getTableName()
             );
         }
     }
+
 }

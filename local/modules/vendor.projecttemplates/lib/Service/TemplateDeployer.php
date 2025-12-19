@@ -7,6 +7,7 @@ use Bitrix\Tasks\Internals\TaskTable;
 use CMain;
 use CModule;
 use CSocNetGroup;
+use CSocNetGroupSubject;
 use Vendor\ProjectTemplates\Table\ProjectTemplateTable;
 use Vendor\ProjectTemplates\Table\ProjectTemplateTaskTable;
 
@@ -53,16 +54,27 @@ class TemplateDeployer
         // Подключаем глобальный $APPLICATION, если его нет (важно для AJAX/компонентов)
         global $APPLICATION;
 
+        $subjectId = 0;
+
+        $subjects = CSocNetGroupSubject::GetList(
+            ['SORT' => 'ASC'],
+            []
+        );
+
+        if ($subject = $subjects->Fetch()) {
+            $subjectId = (int)$subject['ID'];
+        }
+        $uniqueSuffix = date('Ymd_His') . '_' . mt_rand(1000, 9999);
+
         // Обязательные поля
         $groupFields = [
-            'SITE_ID'       => 's1',  // Или SITE_ID, если определена константа. Проверьте в /bitrix/admin/site_edit.php
-            'NAME'          => $template['NAME'] . ' #' . $template['ID'],
-            'DESCRIPTION'   => 'Проект создан по шаблону ID ' . $template['ID'],
-            'VISIBLE'       => 'Y',
-            'OPENED'        => 'Y',
-            'PROJECT'       => 'Y',  // Делает группу проектом
-            'SUBJECT_ID'    => 1,    // !!! Критично! ID темы группы. Проверьте в админке: Сервисы > Социальная сеть > Темы групп
-
+            'SITE_ID'    => SITE_ID,
+            'NAME'       => $template['NAME'] . ' ' . $uniqueSuffix,
+            'STRING_ID'  => 'tpl_' . $template['ID'] . '_' . $uniqueSuffix,
+            'PROJECT'    => 'Y',
+            'VISIBLE'    => 'Y',
+            'OPENED'     => 'Y',
+            'SUBJECT_ID' => $subjectId,
 
             'INITIATE_PERMS' => 'E',  // Кто может приглашать новых участников:
             // 'A' — владелец
@@ -104,8 +116,10 @@ class TemplateDeployer
             'TITLE' => $task['TITLE'],
             'DESCRIPTION' => $task['DESCRIPTION'],
             'RESPONSIBLE_ID' => $task['RESPONSIBLE_ID'],
+            'CREATED_BY' => 1,
             'GROUP_ID' => $projectId,
             'DEADLINE' => $deadline,
+            'SITE_ID' => SITE_ID,
         ]);
 
         if (!$result->isSuccess()) {
