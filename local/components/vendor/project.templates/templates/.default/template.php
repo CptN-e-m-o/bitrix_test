@@ -21,8 +21,13 @@ function deployTemplate(id) {
             mode: 'class',
             data: { templateId: id }
         }
-    ).then(() => {
-        BX.UI.Dialogs.MessageBox.alert('Проект создан');
+    ).then((response) => {
+        if(response.status === 'success' && response.data.success) {
+            BX.UI.Dialogs.MessageBox.alert('Проект создан, ID: ' + response.data.projectId);
+        } else {
+            BX.UI.Dialogs.MessageBox.alert('Ошибка при создании проекта');
+            console.error(response);
+        }
     });
 }
 </script>

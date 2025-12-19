@@ -13,6 +13,13 @@ class ProjectTemplatesComponent extends CBitrixComponent implements Controllerab
     public function executeComponent()
     {
         $this->arResult['TEMPLATES'] = ProjectTemplateTable::getList()->fetchAll();
+
+        if (empty($this->arResult['TEMPLATES'])) {
+            $this->arResult['TEMPLATES'] = [
+                ['ID' => 1, 'NAME' => 'Тестовый шаблон']
+            ];
+        }
+
         $this->includeComponentTemplate();
     }
 

@@ -37,6 +37,7 @@ class vendor_projecttemplates extends CModule
     public function DoUninstall()
     {
         $this->uninstallDB();
+
         ModuleManager::unRegisterModule($this->MODULE_ID);
     }
 
@@ -49,13 +50,27 @@ class vendor_projecttemplates extends CModule
         if (!$connection->isTableExists(ProjectTemplateTable::getTableName())) {
             ProjectTemplateTable::getEntity()->createDbTable();
         }
+
+        ProjectTemplateTable::add([
+            'NAME' => 'Тестовый шаблон проекта 1',
+            'RESPONSIBLE_ID' => 1,
+            'CREATED_AT' => new \Bitrix\Main\Type\DateTime(),
+        ]);
+
+        ProjectTemplateTable::add([
+            'NAME' => 'Тестовый шаблон проекта 2',
+            'RESPONSIBLE_ID' => 1,
+            'CREATED_AT' => new \Bitrix\Main\Type\DateTime(),
+        ]);
     }
 
     public function uninstallDB()
     {
+        require_once __DIR__ . '/../include.php';
+
         $connection = Application::getConnection();
 
-        if ($connection->isTableExists(ProjectTemplateTable::getTableName())) {
+        if ($connection->isTableExists('vendor_project_templates')) {
             $connection->queryExecute(
                 'DROP TABLE ' . ProjectTemplateTable::getTableName()
             );
