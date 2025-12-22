@@ -53,6 +53,20 @@ $aTabs = [
     ],
 ];
 
+$arUsersOptions = [];
+$rsUsers = CUser::GetList(
+    ($by = "last_name"),
+    ($order = "asc"),
+    [
+        'ACTIVE' => 'Y',
+    ],
+    ["FIELDS" => ["ID", "NAME", "LAST_NAME", "LOGIN"]]
+);
+
+while ($user = $rsUsers->Fetch()) {
+    $arUsersOptions[$user['ID']] = htmlspecialcharsbx($user['LAST_NAME'].' '.$user['NAME']);
+}
+
 $tabControl = new CAdminForm("template_form", $aTabs);
 
 echo '<form method="POST" action="">';
@@ -67,7 +81,13 @@ if ($ID > 0) {
 }
 
 $tabControl->AddEditField("NAME", "Название шаблона", false, ["size" => 50], $arData['NAME'] ?? '');
-$tabControl->AddEditField("RESPONSIBLE_ID", "Ответственный (ID)", false, ["size" => 10], $arData['RESPONSIBLE_ID'] ?? '');
+$tabControl->AddDropDownField(
+    "RESPONSIBLE_ID",
+    "Ответственный",
+    false,
+    $arUsersOptions,
+    $arData['RESPONSIBLE_ID'] ?? ''
+);
 
 $tabControl->Buttons([
     "btnSave" => true,
