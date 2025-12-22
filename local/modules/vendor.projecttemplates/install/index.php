@@ -32,12 +32,21 @@ class vendor_projecttemplates extends CModule
     public function DoInstall()
     {
         ModuleManager::registerModule($this->MODULE_ID);
+        CopyDirFiles(
+            __DIR__ . "/../admin",
+            $_SERVER["DOCUMENT_ROOT"] . "/bitrix/admin",
+            true,
+            true
+        );
+
         $this->installDB();
     }
 
     public function DoUninstall()
     {
         $this->uninstallDB();
+
+        DeleteDirFiles(__DIR__ . "/../admin", $_SERVER["DOCUMENT_ROOT"] . "/bitrix/admin");
 
         ModuleManager::unRegisterModule($this->MODULE_ID);
     }
