@@ -4,6 +4,7 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/prolog_admi
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Vendor\ProjectTemplates\Table\ProjectTemplateTable;
+use Vendor\ProjectTemplates\Table\ProjectTemplateTaskTable;
 
 Loader::includeModule('vendor.projecttemplates');
 
@@ -16,11 +17,11 @@ require $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/prolog_admin_aft
 $ID = isset($_GET['ID']) ? (int)$_GET['ID'] : 0;
 $errors = [];
 
-// Обработка формы
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_bitrix_sessid() && isset($_POST['save'])) {
+
     $fields = [
         'NAME' => $_POST['NAME'] ?? '',
-        'RESPONSIBLE_ID' => $_POST['RESPONSIBLE_ID'] ?? '',
+        'RESPONSIBLE_ID' => (int)($_POST['RESPONSIBLE_ID'] ?? 0),
     ];
 
     if ($ID > 0) {
@@ -35,15 +36,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_bitrix_sessid() && isset($_PO
     if (!$result->isSuccess()) {
         $errors = $result->getErrorMessages();
     } else {
+
+        if (!empty($_POST['TASKS']) && is_array($_POST['TASKS'])) {
+            foreach ($_POST['TASKS'] as $taskId => $task) {
+
+                if (!empty($task['DELETE']) && is_numeric($taskId)) {
+                    ProjectTemplateTaskTable::delete((int)$taskId);
+                    continue;
+                }
+
+                $taskFields = [
+                    'TEMPLATE_ID' => $ID,
+                    'TITLE' => $task['TITLE'] ?? '',
+                    'DESCRIPTION' => $task['DESCRIPTION'] ?? '',
+                    'RESPONSIBLE_ID' => (int)($task['RESPONSIBLE_ID'] ?? 0),
+                    'DEADLINE_OFFSET_DAYS' => (int)($task['DEADLINE_OFFSET_DAYS'] ?? 0),
+                ];
+
+                if (is_numeric($taskId)) {
+                    ProjectTemplateTaskTable::update((int)$taskId, $taskFields);
+                } else {
+                    ProjectTemplateTaskTable::add($taskFields);
+                }
+            }
+        }
+
         LocalRedirect("/bitrix/admin/projecttemplates_list.php");
     }
 }
 
-// Получение данных для редактирования
 $arData = [];
 if ($ID > 0) {
     $arData = ProjectTemplateTable::getById($ID)->fetch();
 }
+$arTasks = [];
+$rsTasks = ProjectTemplateTaskTable::getList([
+    'order' => ['ID' => 'ASC'],
+    'filter' => ['TEMPLATE_ID' => $ID],
+]);
+
+while ($task = $rsTasks->fetch()) {
+    $arTasks[] = $task;
+}
+
 
 $aTabs = [
     [
@@ -88,6 +123,86 @@ $tabControl->AddDropDownField(
     $arUsersOptions,
     $arData['RESPONSIBLE_ID'] ?? ''
 );
+$tabControl->BeginCustomField("TASKS", "Задачи шаблона", true); // true — чтобы поле было на всю ширину
+?>
+
+    <tr>
+        <td colspan="2" style="padding: 0;">  <!-- Важно: colspan="2" занимает обе колонки (метку + значение) -->
+
+            <div style="margin: 10px 0;">
+                <b>Задачи шаблона</b>
+            </div>
+
+            <table class="adm-detail-content-table" width="100%" id="tasks-table" style="table-layout: fixed;">
+                <colgroup>
+                    <col width="25%">
+                    <col width="35%">
+                    <col width="20%">
+                    <col width="10%">
+                    <col width="10%">
+                </colgroup>
+
+                <tr class="adm-list-table-header">
+                    <td>Название</td>
+                    <td>Описание</td>
+                    <td>Ответственный</td>
+                    <td>Срок (дни)</td>
+                    <td style="text-align: center;">Действия</td>
+                </tr>
+
+                <?php foreach ($arTasks as $task):
+                    $taskId = (int)$task['ID'];
+                    ?>
+                    <tr valign="top">
+
+                        <td style="padding: 8px 5px;">
+                            <input type="text" name="TASKS[<?= $taskId ?>][TITLE]" value="<?= htmlspecialcharsbx($task['TITLE']) ?>" style="width: 100%; box-sizing: border-box;" />
+                        </td>
+
+                        <td style="padding: 8px 5px;">
+                            <textarea name="TASKS[<?= $taskId ?>][DESCRIPTION]" rows="6" style="width: 100%; box-sizing: border-box; resize: vertical;"><?= htmlspecialcharsbx($task['DESCRIPTION']) ?></textarea>
+                        </td>
+
+                        <td style="padding: 8px 5px;">
+                            <?= SelectBoxFromArray(
+                                'TASKS['.$taskId.'][RESPONSIBLE_ID]',
+                                ['REFERENCE' => array_values($arUsersOptions), 'REFERENCE_ID' => array_keys($arUsersOptions)],
+                                $task['RESPONSIBLE_ID'],
+                                false,
+                                '',
+                                'style="width: 100%; box-sizing: border-box;"'
+                            ) ?>
+                        </td>
+
+                        <td style="padding: 8px 5px;">
+                            <input type="number" name="TASKS[<?= $taskId ?>][DEADLINE_OFFSET_DAYS]" value="<?= $task['DEADLINE_OFFSET_DAYS'] ?>" min="0" style="width: 80px;" />
+                        </td>
+
+                        <td style="padding: 8px 5px; text-align: center;">
+                            <input type="hidden"
+                                   name="TASKS[<?= $taskId ?>][DELETE]"
+                                   value=""
+                                   class="js-task-delete">
+                            <input type="button"
+                                   class="adm-btn-delete"
+                                   value="Удалить"
+                                   onclick="deleteTaskRow(this)">
+                        </td>
+
+
+                    </tr>
+                <?php endforeach; ?>
+
+            </table>
+
+            <br>
+            <input type="button" value="Добавить задачу" onclick="addTaskRow()" class="adm-btn">
+
+        </td>
+    </tr>
+
+<?php
+$tabControl->EndCustomField("TASKS");
 
 $tabControl->Buttons([
     "btnSave" => true,
@@ -106,5 +221,59 @@ if (!empty($errors)) {
         "HTML" => true
     ]);
 }
+?>
+    <script>
+        let taskIndex = 0;
 
+        function addTaskRow() {
+            taskIndex++;
+
+            const table = document.getElementById('tasks-table');
+            const row = table.insertRow(-1);
+
+            row.innerHTML = `
+        <td style="padding: 8px 5px;">
+            <input type="text" placeholder="Введите название задачи" name="TASKS[new${taskIndex}][TITLE]" value="" style="width: 100%; box-sizing: border-box;" />
+        </td>
+        <td style="padding: 8px 5px;">
+            <textarea name="TASKS[new${taskIndex}][DESCRIPTION]" placeholder="Подробное описание задачи..." rows="6" style="width: 100%; box-sizing: border-box; resize: vertical;"></textarea>
+        </td>
+        <td><?=SelectBoxFromArray(
+                'TMP',
+                [
+                    'REFERENCE' => array_values($arUsersOptions),
+                    'REFERENCE_ID' => array_keys($arUsersOptions)
+                ],
+                ''
+            )?></td>
+        <td style="padding: 8px 5px;">
+            <input type="number" name="TASKS[new${taskIndex}][DEADLINE_OFFSET_DAYS]" value="1" min="0" style="width: 80px;" />
+        </td>
+        <td>
+            <input type="button"
+                class="adm-btn-delete"
+                value="Удалить"
+                onclick="deleteTaskRow(this)">
+        </td>
+        <td></td>
+    `.replace(/TMP/g, `TASKS[new${taskIndex}][RESPONSIBLE_ID]`);
+        }
+
+        function deleteTaskRow(button) {
+            if (!confirm('Удалить задачу?')) {
+                return;
+            }
+
+            const row = button.closest('tr');
+            const deleteInput = row.querySelector('.js-task-delete');
+
+            if (deleteInput) {
+                deleteInput.value = 'Y';
+                row.style.display = 'none';
+            } else {
+                row.remove();
+            }
+        }
+    </script>
+<?php
 require $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/epilog_admin.php';
