@@ -51,7 +51,6 @@ class TemplateDeployer
             throw new \Exception('Не указан ответственный в шаблоне');
         }
 
-        // Подключаем глобальный $APPLICATION, если его нет (важно для AJAX/компонентов)
         global $APPLICATION;
 
         $subjectId = 0;
@@ -64,9 +63,8 @@ class TemplateDeployer
         if ($subject = $subjects->Fetch()) {
             $subjectId = (int)$subject['ID'];
         }
-        $uniqueSuffix = date('Ymd_His') . '_' . mt_rand(1000, 9999);
+        $uniqueSuffix = date('Y-m-d');
 
-        // Обязательные поля
         $groupFields = [
             'SITE_ID'    => SITE_ID,
             'NAME'       => $template['NAME'] . ' ' . $uniqueSuffix,
@@ -76,28 +74,21 @@ class TemplateDeployer
             'OPENED'     => 'Y',
             'SUBJECT_ID' => $subjectId,
 
-            'INITIATE_PERMS' => 'E',  // Кто может приглашать новых участников:
-            // 'A' — владелец
-            // 'E' — модераторы группы
-            // 'K' — все участники группы (рекомендую для открытых проектов)
-            // 'M' — владелец и модераторы
+            'INITIATE_PERMS' => 'E',
             'SPAM_PERMS'     => 'K',
         ];
 
-        // ID владельца (он же будет добавлен как владелец группы)
         $ownerId = (int)$template['RESPONSIBLE_ID'];
 
-        // Создаём группу
         $groupId = CSocNetGroup::CreateGroup($ownerId, $groupFields, false); // Третий параметр — не индексировать сразу (опционально)
 
         if (!$groupId) {
             $errorMessage = 'Неизвестная ошибка создания группы';
 
-            // Пытаемся получить ошибку через $APPLICATION
             if (isset($APPLICATION) && $APPLICATION instanceof CMain) {
                 if ($ex = $APPLICATION->GetException()) {
                     $errorMessage = $ex->GetString();
-                    $APPLICATION->ResetException(); // Сбрасываем, чтобы не накапливалось
+                    $APPLICATION->ResetException();
                 }
             }
 
@@ -110,7 +101,14 @@ class TemplateDeployer
     private function createTask(array $task, int $projectId): void
     {
         $deadline = new DateTime();
-        $deadline->add('+' . $task['DEADLINE_OFFSET_DAYS'] . ' days');
+
+        if ((int)$task['DEADLINE_OFFSET_DAYS'] === 0) {
+            $deadline->setTime(23, 59, 59);
+        } else {
+            $deadline
+                ->setTime(23, 59, 59)
+                ->add('+' . $task['DEADLINE_OFFSET_DAYS'] . ' days');
+        }
 
         $result = TaskTable::add([
             'TITLE' => $task['TITLE'],

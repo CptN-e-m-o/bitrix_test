@@ -4,6 +4,7 @@ namespace Vendor\ProjectTemplates\Table;
 
 use Bitrix\Main\ORM\Data\DataManager;
 use Bitrix\Main\ORM\Fields;
+use Bitrix\Main\Type\DateTime;
 
 class ProjectTemplateTable extends DataManager
 {
@@ -26,7 +27,7 @@ class ProjectTemplateTable extends DataManager
                 'required' => true,
             ]),
             new Fields\DatetimeField('CREATED_AT', [
-                'default_value' => new \Bitrix\Main\Type\DateTime(),
+                'default_value' => new DateTime(),
             ]),
         ];
     }
