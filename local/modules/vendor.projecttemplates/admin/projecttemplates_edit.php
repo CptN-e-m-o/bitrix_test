@@ -6,11 +6,13 @@ use Bitrix\Main\Localization\Loc;
 use Vendor\ProjectTemplates\Table\ProjectTemplateTable;
 use Vendor\ProjectTemplates\Table\ProjectTemplateTaskTable;
 
+Loc::loadMessages(__FILE__);
+
 Loader::includeModule('vendor.projecttemplates');
 
 global $APPLICATION;
 
-$APPLICATION->SetTitle('Редактирование шаблона проекта');
+$APPLICATION->SetTitle(Loc::getMessage('VENDOR_PT_EDIT_TITLE'));
 
 require $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/main/include/prolog_admin_after.php';
 
@@ -82,9 +84,9 @@ while ($task = $rsTasks->fetch()) {
 
 $aTabs = [
     [
-        "DIV" => "edit1",
-        "TAB" => "Основные",
-        "TITLE" => "Основные настройки шаблона"
+        'DIV' => 'edit1',
+        'TAB' => Loc::getMessage('VENDOR_PT_TAB_MAIN'),
+        'TITLE' => Loc::getMessage('VENDOR_PT_TAB_MAIN_TITLE'),
     ],
 ];
 
@@ -111,26 +113,33 @@ $tabControl->Begin();
 $tabControl->BeginNextFormTab();
 
 if ($ID > 0) {
-    $tabControl->AddViewField("ID", "ID", $ID);
-    $tabControl->AddViewField("CREATED_AT", "Дата создания", $arData['CREATED_AT']);
+    $tabControl->AddViewField('ID', 'ID', $ID);
+    $tabControl->AddViewField('CREATED_AT', Loc::getMessage('VENDOR_PT_CREATED_AT'), $arData['CREATED_AT']);
 }
 
-$tabControl->AddEditField("NAME", "Название шаблона", false, ["size" => 50], $arData['NAME'] ?? '');
+$tabControl->AddEditField(
+    'NAME',
+    Loc::getMessage('VENDOR_PT_NAME'),
+    false,
+    ['size' => 50],
+    $arData['NAME'] ?? ''
+);
+
 $tabControl->AddDropDownField(
-    "RESPONSIBLE_ID",
-    "Ответственный",
+    'RESPONSIBLE_ID',
+    Loc::getMessage('VENDOR_PT_RESPONSIBLE'),
     false,
     $arUsersOptions,
     $arData['RESPONSIBLE_ID'] ?? ''
 );
-$tabControl->BeginCustomField("TASKS", "Задачи шаблона", true); // true — чтобы поле было на всю ширину
+$tabControl->BeginCustomField('TASKS', Loc::getMessage('VENDOR_PT_TASKS'), true);
 ?>
 
     <tr>
-        <td colspan="2" style="padding: 0;">  <!-- Важно: colspan="2" занимает обе колонки (метку + значение) -->
+        <td colspan="2" style="padding: 0;">
 
             <div style="margin: 10px 0;">
-                <b>Задачи шаблона</b>
+                <b><?=Loc::getMessage('VENDOR_PT_TASKS')?></b>
             </div>
 
             <table class="adm-detail-content-table" width="100%" id="tasks-table" style="table-layout: fixed;">
@@ -143,11 +152,11 @@ $tabControl->BeginCustomField("TASKS", "Задачи шаблона", true); // 
                 </colgroup>
 
                 <tr class="adm-list-table-header">
-                    <td>Название</td>
-                    <td>Описание</td>
-                    <td>Ответственный</td>
-                    <td>Срок (дни)</td>
-                    <td style="text-align: center;">Действия</td>
+                    <td><?=Loc::getMessage('VENDOR_PT_TASK_TITLE')?></td>
+                    <td><?=Loc::getMessage('VENDOR_PT_TASK_DESCRIPTION')?></td>
+                    <td><?=Loc::getMessage('VENDOR_PT_TASK_RESPONSIBLE')?></td>
+                    <td><?=Loc::getMessage('VENDOR_PT_TASK_DEADLINE')?></td>
+                    <td style="text-align: center;"><?=Loc::getMessage('VENDOR_PT_ACTIONS')?></td>
                 </tr>
 
                 <?php foreach ($arTasks as $task):
@@ -196,7 +205,7 @@ $tabControl->BeginCustomField("TASKS", "Задачи шаблона", true); // 
             </table>
 
             <br>
-            <input type="button" value="Добавить задачу" onclick="addTaskRow()" class="adm-btn">
+            <input type="button" value="<?=Loc::getMessage('VENDOR_PT_ADD_TASK')?>" onclick="addTaskRow()" class="adm-btn">
 
         </td>
     </tr>

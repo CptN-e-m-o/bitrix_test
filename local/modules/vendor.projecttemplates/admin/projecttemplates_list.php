@@ -3,11 +3,14 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_before.php';
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Vendor\ProjectTemplates\Table\ProjectTemplateTable;
+
+Loc::loadMessages(__FILE__);
 
 Loader::includeModule('vendor.projecttemplates');
 
-$APPLICATION->SetTitle('Шаблоны проектов');
+$APPLICATION->SetTitle(Loc::getMessage('VENDOR_PT_LIST_TITLE'));
 
 $tableId = 'vendor_projecttemplates_list';
 $list = new CAdminList($tableId);
@@ -30,27 +33,10 @@ $rsData = ProjectTemplateTable::getList([
 ]);
 
 $list->AddHeaders([
-    [
-        'id' => 'ID',
-        'content' => 'ID',
-        'sort' => 'ID',
-        'default' => true,
-    ],
-    [
-        'id' => 'NAME',
-        'content' => 'Название',
-        'default' => true,
-    ],
-    [
-        'id' => 'RESPONSIBLE_ID',
-        'content' => 'Ответственный',
-        'default' => true,
-    ],
-    [
-        'id' => 'CREATED_AT',
-        'content' => 'Создан',
-        'default' => true,
-    ],
+    ['id' => 'ID', 'content' => Loc::getMessage('VENDOR_PT_LIST_ID'), 'sort' => 'ID', 'default' => true],
+    ['id' => 'NAME', 'content' => Loc::getMessage('VENDOR_PT_LIST_NAME'), 'default' => true],
+    ['id' => 'RESPONSIBLE_ID', 'content' => Loc::getMessage('VENDOR_PT_LIST_RESPONSIBLE'), 'default' => true],
+    ['id' => 'CREATED_AT', 'content' => Loc::getMessage('VENDOR_PT_LIST_CREATED_AT'), 'default' => true],
 ]);
 
 while ($row = $rsData->fetch()) {
@@ -69,16 +55,16 @@ while ($row = $rsData->fetch()) {
     $item->AddActions([
         [
             'ICON' => 'edit',
-            'TEXT' => 'Редактировать',
+            'TEXT' => Loc::getMessage('VENDOR_PT_LIST_EDIT'),
             'ACTION' => $list->ActionRedirect(
                 'projecttemplates_edit.php?ID=' . $row['ID'] . '&lang=' . LANGUAGE_ID
             ),
         ],
         [
             'ICON' => 'delete',
-            'TEXT' => 'Удалить',
+            'TEXT' => Loc::getMessage('VENDOR_PT_LIST_DELETE'),
             'ACTION' =>
-                "if(confirm('Удалить?')) window.location='"
+                "if(confirm('".Loc::getMessage('VENDOR_PT_LIST_DELETE_CONFIRM')."')) window.location='"
                 . $APPLICATION->GetCurPageParam(
                     'action=delete&ID=' . $row['ID'],
                     ['action', 'ID']
@@ -90,7 +76,7 @@ while ($row = $rsData->fetch()) {
 
 $list->AddAdminContextMenu([
     [
-        'TEXT' => 'Добавить шаблон',
+        'TEXT' => Loc::getMessage('VENDOR_PT_LIST_ADD_TEMPLATE'),
         'LINK' => 'projecttemplates_edit.php?lang=' . LANGUAGE_ID,
         'ICON' => 'btn_new',
     ],
