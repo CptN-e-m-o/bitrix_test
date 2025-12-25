@@ -165,17 +165,22 @@ $tabControl->BeginCustomField('TASKS', Loc::getMessage('VENDOR_PT_TASKS'), true)
                     <tr valign="top">
 
                         <td style="padding: 8px 5px;">
-                            <input type="text" name="TASKS[<?= $taskId ?>][TITLE]" value="<?= htmlspecialcharsbx($task['TITLE']) ?>" style="width: 100%; box-sizing: border-box;" />
+                            <input type="text" name="TASKS[<?= $taskId ?>][TITLE]"
+                               value="<?= htmlspecialcharsbx($task['TITLE']) ?>" style="width: 100%;
+                            box-sizing: border-box;" />
                         </td>
 
                         <td style="padding: 8px 5px;">
-                            <textarea name="TASKS[<?= $taskId ?>][DESCRIPTION]" rows="6" style="width: 100%; box-sizing: border-box; resize: vertical;"><?= htmlspecialcharsbx($task['DESCRIPTION']) ?></textarea>
+                            <textarea name="TASKS[<?= $taskId ?>][DESCRIPTION]" rows="6" style="width: 100%;
+                                box-sizing: border-box; resize: vertical;"><?= htmlspecialcharsbx($task['DESCRIPTION'])
+                            ?></textarea>
                         </td>
 
                         <td style="padding: 8px 5px;">
                             <?= SelectBoxFromArray(
                                 'TASKS['.$taskId.'][RESPONSIBLE_ID]',
-                                ['REFERENCE' => array_values($arUsersOptions), 'REFERENCE_ID' => array_keys($arUsersOptions)],
+                                ['REFERENCE' => array_values($arUsersOptions),
+                                'REFERENCE_ID' => array_keys($arUsersOptions)],
                                 $task['RESPONSIBLE_ID'],
                                 false,
                                 '',
@@ -184,7 +189,8 @@ $tabControl->BeginCustomField('TASKS', Loc::getMessage('VENDOR_PT_TASKS'), true)
                         </td>
 
                         <td style="padding: 8px 5px;">
-                            <input type="number" name="TASKS[<?= $taskId ?>][DEADLINE_OFFSET_DAYS]" value="<?= $task['DEADLINE_OFFSET_DAYS'] ?>" min="0" style="width: 80px;" />
+                            <input type="number" name="TASKS[<?= $taskId ?>][DEADLINE_OFFSET_DAYS]"
+                                   value="<?= $task['DEADLINE_OFFSET_DAYS'] ?>" min="0" style="width: 80px;" />
                         </td>
 
                         <td style="padding: 8px 5px; text-align: center;">
@@ -205,7 +211,8 @@ $tabControl->BeginCustomField('TASKS', Loc::getMessage('VENDOR_PT_TASKS'), true)
             </table>
 
             <br>
-            <input type="button" value="<?=Loc::getMessage('VENDOR_PT_ADD_TASK')?>" onclick="addTaskRow()" class="adm-btn">
+            <input type="button" value="<?=Loc::getMessage('VENDOR_PT_ADD_TASK')?>" onclick="addTaskRow()"
+                   class="adm-btn">
 
         </td>
     </tr>
@@ -242,10 +249,12 @@ if (!empty($errors)) {
 
             row.innerHTML = `
         <td style="padding: 8px 5px;">
-            <input type="text" placeholder="Введите название задачи" name="TASKS[new${taskIndex}][TITLE]" value="" style="width: 100%; box-sizing: border-box;" />
+            <input type="text" placeholder="Введите название задачи" name="TASKS[new${taskIndex}][TITLE]" value=""
+            style="width: 100%; box-sizing: border-box;" />
         </td>
         <td style="padding: 8px 5px;">
-            <textarea name="TASKS[new${taskIndex}][DESCRIPTION]" placeholder="Подробное описание задачи..." rows="6" style="width: 100%; box-sizing: border-box; resize: vertical;"></textarea>
+            <textarea name="TASKS[new${taskIndex}][DESCRIPTION]" placeholder="Подробное описание задачи..." rows="6"
+            style="width: 100%; box-sizing: border-box; resize: vertical;"></textarea>
         </td>
         <td><?=SelectBoxFromArray(
                 'TMP',
@@ -256,7 +265,8 @@ if (!empty($errors)) {
                 ''
             )?></td>
         <td style="padding: 8px 5px;">
-            <input type="number" name="TASKS[new${taskIndex}][DEADLINE_OFFSET_DAYS]" value="1" min="0" style="width: 80px;" />
+            <input type="number" name="TASKS[new${taskIndex}][DEADLINE_OFFSET_DAYS]" value="1" min="0"
+            style="width: 80px;" />
         </td>
         <td>
             <input type="button"

@@ -80,7 +80,7 @@ class TemplateDeployer
 
         $ownerId = (int)$template['RESPONSIBLE_ID'];
 
-        $groupId = CSocNetGroup::CreateGroup($ownerId, $groupFields, false); // Третий параметр — не индексировать сразу (опционально)
+        $groupId = CSocNetGroup::CreateGroup($ownerId, $groupFields, false);
 
         if (!$groupId) {
             $errorMessage = 'Неизвестная ошибка создания группы';
